@@ -13,6 +13,6 @@ display: 500
 max_iter: 300000
 # snapshot intermediate results
 snapshot: 500
-snapshot_prefix: "models/Openpose-Depth/pose"
+snapshot_prefix: "models/Openpose-Depth/Result/pose"
 # solver mode: CPU or GPU
 solver_mode: GPU
