@@ -43,20 +43,38 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int height = this->layer_param_.transform_param().crop_size_y();
   const int width = this->layer_param_.transform_param().crop_size_x();
   const bool put_gaussian = this->layer_param_.transform_param().put_gaussian();
-
-  if(put_gaussian){
-    top[0]->Reshape(batch_size, 2, height, width);
-    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-      this->prefetch_[i].data_.Reshape(batch_size, 2, height, width);
-    }
-    this->transformed_data_.Reshape(1, 2, height, width);
+  const int gray = this->layer_param_.transform_param().gray();
+  if (gray == 1){
+	  if (put_gaussian){
+		  top[0]->Reshape(batch_size, 2, height, width);
+		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+			  this->prefetch_[i].data_.Reshape(batch_size, 2, height, width);
+		  }
+		  this->transformed_data_.Reshape(1, 2, height, width);
+	  }
+	  else {
+		  top[0]->Reshape(batch_size, 1, height, width);
+		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+			  this->prefetch_[i].data_.Reshape(batch_size, 1, height, width);
+		  }
+		  this->transformed_data_.Reshape(1, 1, height, width);
+	  }
   }
-  else {
-    top[0]->Reshape(batch_size, 1, height, width);
-    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-      this->prefetch_[i].data_.Reshape(batch_size, 1, height, width);
-    }
-    this->transformed_data_.Reshape(1, 1, height, width);
+  else{
+	  if (put_gaussian){
+		  top[0]->Reshape(batch_size, 4, height, width);
+		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+			  this->prefetch_[i].data_.Reshape(batch_size, 4, height, width);
+		  }
+		  this->transformed_data_.Reshape(1, 4, height, width);
+	  }
+	  else {
+		  top[0]->Reshape(batch_size, 3, height, width);
+		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+			  this->prefetch_[i].data_.Reshape(batch_size, 3, height, width);
+		  }
+		  this->transformed_data_.Reshape(1, 3, height, width);
+	  }
   }
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -68,11 +86,11 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const int stride = this->layer_param_.transform_param().stride();
     int num_parts = this->layer_param_.transform_param().num_parts();
 
-    top[1]->Reshape(batch_size, 2*(num_parts+1), height/stride, width/stride); //plus 1 for background
+    top[1]->Reshape(batch_size,2 * (num_parts+1), height/stride, width/stride); //plus 1 for background
     for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-      this->prefetch_[i].label_.Reshape(batch_size, 2*(num_parts+1), height/stride, width/stride);
+		this->prefetch_[i].label_.Reshape(batch_size, 2 * (num_parts + 1), height / stride, width / stride);
     }
-    this->transformed_label_.Reshape(1, 2*(num_parts+1), height/stride, width/stride);
+	this->transformed_label_.Reshape(1, 2 * (num_parts + 1), height / stride, width / stride);
 
     LOG(INFO) << "output label size: " << top[1]->num() << ","
         << top[1]->channels() << "," << top[1]->height() << ","

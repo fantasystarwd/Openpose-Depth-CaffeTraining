@@ -132,19 +132,24 @@ class DataTransformer {
 
   struct AugmentSelection {
     bool flip;
+	std::pair<cv::Mat, cv::Size> rotAndFinalSize;
     float degree;
     Size crop;
+	Point2i cropCenter;
     float scale;
+	float scaleMultiplier;
   };
 
   struct Joints {
     vector<Point2f> joints;
+	vector<float> depths;
     vector<int> isVisible;
   };
 
   struct MetaData {
     string dataset;
     Size img_size;
+	bool isThreeD;
     bool isValidation;
     int numOtherPeople;
     int people_index;
@@ -154,7 +159,7 @@ class DataTransformer {
     int epoch;
     Point2f objpos; //objpos_x(float), objpos_y (float)
     float scale_self;
-    Joints joint_self; //(3*14)
+    Joints joint_self; //(3*14) or (4*14)
 
     vector<Point2f> objpos_other; //length is numOtherPeople
     vector<float> scale_other; //length is numOtherPeople
@@ -164,10 +169,14 @@ class DataTransformer {
   void generateLabelMap(Dtype*, Mat&, MetaData meta);
   void visualize(Mat& img, MetaData meta, AugmentSelection as);
 
-  bool augmentation_flip(Mat& img, Mat& img_aug, MetaData& meta);
-  float augmentation_rotate(Mat& img_src, Mat& img_aug, MetaData& meta);
-  float augmentation_scale(Mat& img, Mat& img_temp, MetaData& meta);
-  Size augmentation_croppad(Mat& img_temp, Mat& img_aug, MetaData& meta);
+  void applyAllAugmentation(cv::Mat& imageAugmented, const cv::Mat& rotationMatrix,
+	  const float scale, const bool flip, const cv::Point2i& cropCenter,
+	  const cv::Size& finalSize, const cv::Mat& image,
+	  const Scalar defaultBorderValue);
+  bool augmentation_flip(MetaData& meta, int imageWidth);
+  std::pair<std::pair<Mat, Size>, float> augmentation_rotate(MetaData& meta,const Size& imageSize);
+  std::pair<float, float> augmentation_scale(MetaData& meta);
+  std::pair<Point2i, Size> augmentation_croppad(MetaData& meta);
   void RotatePoint(Point2f& p, Mat R);
   bool onPlane(Point p, Size img_size);
   void swapLeftRight(Joints& j);

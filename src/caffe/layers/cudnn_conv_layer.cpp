@@ -108,6 +108,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   const int stride_h = stride_data[0];
   const int stride_w = stride_data[1];
 
+  // LOG(INFO) << "Test: " << height;
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
   size_t workspace_limit_bytes = 8*1024*1024;
@@ -126,7 +127,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
         filter_desc_, pad_h, pad_w,
         stride_h, stride_w);
-
+	// LOG(INFO) << "Test: " << &handle_[0] << ", " << &bottom_descs_[i] << ", " << &filter_desc_ << ", " << &conv_descs_[i] << ", " << &top_descs_[i] << &workspace_limit_bytes << ", " << &fwd_algo_[i];
     // choose forward and backward algorithms + workspace(s)
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(handle_[0],
       bottom_descs_[i],
@@ -186,6 +187,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
                              total_workspace_bwd_data);
   max_workspace = std::max(max_workspace, total_workspace_bwd_filter);
   // ensure all groups have enough workspace
+  size_t m=32;
+  max_workspace = (max_workspace + m-1) / m * m; //align address to be multiples of m
   size_t total_max_workspace = max_workspace *
                                (this->group_ * CUDNN_STREAMS_PER_GROUP);
 
